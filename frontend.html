@@ -235,7 +235,7 @@ Requirements:
         
         try {
           // Fetch token for manual entry
-          const tokenResponse = await fetch(`http://localhost:5000/token?roomName=${roomName}&participantName=candidate`);
+          const tokenResponse = await fetch(`https://token-nmmo.onrender.com/token?roomName=${roomName}&participantName=candidate`);
           const tokenData = await tokenResponse.json();
           
           const url = new URL('https://agents-playground.livekit.io/');
@@ -276,14 +276,18 @@ Requirements:
           const formData = new FormData();
           formData.append('file', file);
           
-          const response = await fetch('http://localhost:8000/upload', { 
+          const response = await fetch('https://mcp-server-qvqr.onrender.com/upload', { 
             method: 'POST', 
             body: formData 
           });
           
           if (!response.ok) {
+            console.log(response)
+            showStatus(`❌ Upload failed: ${response.status}`, 'error');
             throw new Error(`Upload failed: ${response.status}`);
+
           }
+          
           
           const data = await response.json();
           
@@ -346,7 +350,7 @@ Requirements:
           formData.append('jobDescription', jd);
           formData.append('resumeText', resumeText);
 
-          const response = await fetch('http://localhost:8000/context', { 
+          const response = await fetch('https://mcp-server-qvqr.onrender.com/context', { 
             method: 'POST', 
             body: formData 
           });

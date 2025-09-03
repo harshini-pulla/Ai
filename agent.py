@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] INTE
 
 MCP_PORT = int(os.getenv("MCP_PORT", "8000"))
 MCP_HOST = os.getenv("MCP_HOST", "http://localhost")
-MCP_SERVER_URL = f"{MCP_HOST}:{MCP_PORT}/mcp"
+MCP_SERVER_URL = "https://mcp-server-qvqr.onrender.com/mcp"
 
 class MCPHTTPClient:
     def __init__(self, url: str):

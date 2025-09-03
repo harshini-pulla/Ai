@@ -1,0 +1,390 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Interviewer — Intake</title>
+    <style>
+      body { 
+        font-family: Inter, system-ui, Arial, sans-serif; 
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        margin: 0; 
+        padding: 2rem;
+        min-height: 100vh;
+      }
+      .card { 
+        max-width: 720px; 
+        margin: 0 auto; 
+        background: #fff; 
+        border-radius: 20px; 
+        padding: 32px; 
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        backdrop-filter: blur(10px);
+      }
+      h1 { 
+        margin: 0 0 8px 0; 
+        color: #2d3748;
+        font-size: 2rem;
+        font-weight: 700;
+      }
+      .subtitle {
+        color: #718096;
+        font-size: 1.1rem;
+        margin-bottom: 24px;
+      }
+      label { 
+        display: block; 
+        font-weight: 600; 
+        margin-top: 18px;
+        color: #4a5568;
+        font-size: 14px;
+      }
+      input, textarea { 
+        width: 100%; 
+        padding: 14px; 
+        border: 2px solid #e2e8f0; 
+        border-radius: 12px; 
+        font-size: 14px;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+      }
+      input:focus, textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+      textarea { min-height: 120px; resize: vertical; }
+      .row { display: flex; gap: 16px; margin-top: 14px; }
+      .row > div { flex: 1; }
+      .btn { 
+        margin-top: 24px; 
+        padding: 16px 24px; 
+        border-radius: 12px; 
+        border: none; 
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff; 
+        font-weight: 700; 
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.2s ease;
+        width: 100%;
+      }
+      .btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+      }
+      .btn:disabled { 
+        background: #e2e8f0; 
+        color: #a0aec0; 
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+      .note { 
+        font-size: 13px; 
+        color: #718096; 
+        margin-top: 8px; 
+        line-height: 1.5;
+      }
+      .link { 
+        margin-top: 16px;
+        text-align: center;
+      }
+      .link a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+        padding: 8px 16px;
+        border: 2px solid #667eea;
+        border-radius: 8px;
+        display: inline-block;
+        transition: all 0.2s ease;
+      }
+      .link a:hover {
+        background: #667eea;
+        color: white;
+      }
+      .status {
+        margin-top: 16px;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .status.success {
+        background: #f0fff4;
+        color: #38a169;
+        border: 1px solid #9ae6b4;
+      }
+      .status.info {
+        background: #ebf8ff;
+        color: #3182ce;
+        border: 1px solid #90cdf4;
+      }
+      .file-upload {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+        margin-top: 8px;
+      }
+      .file-upload input[type=file] {
+        position: absolute;
+        left: -9999px;
+      }
+      .file-upload-label {
+        display: block;
+        padding: 14px;
+        border: 2px dashed #cbd5e0;
+        border-radius: 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: #f7fafc;
+      }
+      .file-upload-label:hover {
+        border-color: #667eea;
+        background: #edf2f7;
+      }
+      .file-upload-label.has-file {
+        border-color: #38a169;
+        background: #f0fff4;
+        color: #38a169;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>AI Interview Portal</h1>
+      <p class="subtitle">Complete your details and upload your resume to begin your AI-powered interview session.</p>
+
+      <div class="row">
+        <div><label>Full Name *<input id="name" placeholder="John Doe" required/></label></div>
+        <div><label>Email Address *<input id="email" type="email" placeholder="john@example.com" required/></label></div>
+      </div>
+      <div class="row">
+        <div><label>Phone Number<input id="phone" placeholder="+1 (555) 123-4567"/></label></div>
+      </div>
+      
+      <label>Job Title<input id="jobTitle" value="Senior Sales Manager"/></label>
+      
+      <label>Job Description *<textarea id="jd" required>We are seeking an experienced Senior Sales Manager to lead our regional sales team. You will be responsible for:
+
+• Managing and mentoring a team of 6 Account Executives
+• Driving enterprise pipeline development and growth
+• Exceeding quarterly revenue targets ($2M+ quota)
+• Implementing MEDDIC sales methodology
+• Maintaining CRM hygiene and accurate forecasting
+• Building strategic relationships with key accounts
+• Collaborating with marketing and product teams
+
+Requirements:
+• 5+ years in B2B sales leadership
+• Experience with enterprise sales cycles
+• Strong track record of quota achievement
+• Excellent communication and coaching skills
+• Experience with Salesforce or similar CRM</textarea></label>
+
+      <label>Resume Upload *
+        <div class="file-upload">
+          <input type="file" id="resume" accept=".pdf,.docx,.txt" required/>
+          <label for="resume" class="file-upload-label" id="fileLabel">
+            📄 Click to upload your resume (PDF, DOCX, or TXT)
+          </label>
+        </div>
+      </label>
+      <div class="note">Your resume will be analyzed to personalize the interview questions.</div>
+
+      <button id="startBtn" class="btn" disabled>Upload Resume to Enable Interview</button>
+      
+      <div id="statusDiv"></div>
+      
+      <div class="link">
+        <a id="playgroundLink" target="_blank" rel="noopener noreferrer" style="display: none;">
+          🚀 Join Interview Room
+        </a>
+      </div>
+      
+      <div class="note" style="margin-top: 16px; text-align: center;">
+        <strong>Next Steps:</strong> After clicking "Start Interview", use the room link above to join your interview session.
+      </div>
+    </div>
+
+    <script>
+      const resumeEl = document.getElementById('resume');
+      const startBtn = document.getElementById('startBtn');
+      const link = document.getElementById('playgroundLink');
+      const statusDiv = document.getElementById('statusDiv');
+      const fileLabel = document.getElementById('fileLabel');
+
+      let resumeText = "";
+      let roomName = "";
+
+      function showStatus(message, type = 'info') {
+        statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+      }
+
+      function generateRoomName() {
+        const now = new Date();
+        const timeStr = now.toTimeString().slice(0, 8).replace(/:/g, '');
+        const random = Math.floor(Math.random() * 100).toString().padStart(2, '0');
+        return `interview-${timeStr}-${random}`;
+      }
+
+      async function updatePlaygroundLink() {
+        if (!roomName) return;
+        
+        try {
+          // Fetch token for manual entry
+          const tokenResponse = await fetch(`http://localhost:5000/token?roomName=${roomName}&participantName=candidate`);
+          const tokenData = await tokenResponse.json();
+          
+          const url = new URL('https://agents-playground.livekit.io/');
+          url.searchParams.set('theme_color', 'blue');
+          url.searchParams.set('room', roomName);
+          url.searchParams.set('identity', 'candidate');
+          
+          if (tokenData.token) {
+            url.searchParams.set('token', tokenData.token);
+          }
+          
+          link.href = url.toString();
+          link.textContent = `🚀 Join Interview Room: ${roomName}`;
+          link.style.display = 'inline-block';
+        } catch (error) {
+          console.error('Token fetch failed:', error);
+          // Fallback to current implementation
+          const url = new URL('https://agents-playground.livekit.io/');
+          url.searchParams.set('theme_color', 'blue');
+          url.searchParams.set('room', roomName);
+          url.searchParams.set('identity', 'candidate');
+          
+          link.href = url.toString();
+          link.textContent = `🚀 Join Interview Room: ${roomName}`;
+          link.style.display = 'inline-block';
+        }
+      }
+
+      resumeEl.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        showStatus('📤 Uploading and processing resume...', 'info');
+        fileLabel.textContent = '⏳ Processing...';
+        startBtn.disabled = true;
+
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          
+          const response = await fetch('http://localhost:8000/upload', { 
+            method: 'POST', 
+            body: formData 
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Upload failed: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          
+          if (data.ok && data.text) {
+            resumeText = data.text;
+            fileLabel.textContent = `✅ ${file.name} uploaded successfully`;
+            fileLabel.classList.add('has-file');
+            startBtn.disabled = false;
+            startBtn.textContent = "🎯 Start AI Interview";
+            showStatus('✅ Resume processed successfully! You can now start the interview.', 'success');
+          } else {
+            throw new Error('Invalid response from server');
+          }
+        } catch (error) {
+          console.error('Upload error:', error);
+          showStatus(`❌ Upload failed: ${error.message}`, 'error');
+          fileLabel.textContent = '❌ Upload failed - try again';
+          startBtn.disabled = true;
+        }
+      });
+
+      startBtn.addEventListener('click', async () => {
+        // Validate required fields
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const jobTitle = document.getElementById('jobTitle').value.trim();
+        const jd = document.getElementById('jd').value.trim();
+        
+        if (!name || !email || !jobTitle || !jd) {
+          showStatus('❌ Please fill in all required fields (marked with *)', 'error');
+          return;
+        }
+
+        if (!resumeText) {
+          showStatus('❌ Please upload your resume first', 'error');
+          return;
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          showStatus('❌ Please enter a valid email address', 'error');
+          return;
+        }
+
+        showStatus('🔄 Setting up interview room...', 'info');
+        startBtn.disabled = true;
+        startBtn.textContent = '⏳ Creating Interview Room...';
+
+        try {
+          // Generate unique room name
+          roomName = generateRoomName();
+          
+          const formData = new FormData();
+          formData.append('roomName', roomName);
+          formData.append('name', name);
+          formData.append('email', email);
+          formData.append('phone', document.getElementById('phone').value.trim());
+          formData.append('jobTitle', jobTitle);
+          formData.append('jobDescription', jd);
+          formData.append('resumeText', resumeText);
+
+          const response = await fetch('http://localhost:8000/context', { 
+            method: 'POST', 
+            body: formData 
+          });
+
+          if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+          }
+
+          const data = await response.json();
+          
+          if (data.ok) {
+            await updatePlaygroundLink();
+            showStatus(`✅ Interview room created successfully! Room ID: ${roomName}`, 'success');
+            startBtn.textContent = '✅ Interview Room Ready';
+            startBtn.style.background = '#38a169';
+            
+            // Show instructions
+            setTimeout(() => {
+              showStatus(`🎯 Ready to interview! Click "Join Interview Room" above and wait for your AI interviewer "Orion" to greet you.`, 'info');
+            }, 2000);
+          } else {
+            throw new Error('Failed to create interview context');
+          }
+        } catch (error) {
+          console.error('Setup error:', error);
+          showStatus(`❌ Failed to setup interview: ${error.message}`, 'error');
+          startBtn.disabled = false;
+          startBtn.textContent = '🎯 Start AI Interview';
+        }
+      });
+
+      // Auto-fill some demo data for testing
+      document.addEventListener('DOMContentLoaded', () => {
+        // Uncomment these lines for quick testing
+        // document.getElementById('name').value = 'Alex Johnson';
+        // document.getElementById('email').value = 'alex.johnson@email.com';
+        // document.getElementById('phone').value = '+1 (555) 123-4567';
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,27 @@
+python-dotenv>=1.0.0
+httpx>=0.25.0
+
+# FastAPI MCP + email
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.1
+python-multipart>=0.0.6
+
+# LiveKit Agent
+livekit>=0.8.0
+livekit-agents>=0.8.0
+livekit-plugins-openai>=0.8.0
+livekit-plugins-silero>=0.8.0
+
+# Token server (optional for your own LiveKit room tokens)
+flask>=2.3.0
+flask-cors>=4.0.0
+
+# OpenAI
+openai>=1.30.0
+
+# Resume parsing helpers
+pdfminer.six>=20231228
+python-docx>=1.0.1
+
+# Optional skill layer for Gmail
+composio>=0.3.0

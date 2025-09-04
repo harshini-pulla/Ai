@@ -13,7 +13,7 @@ PORT = int(os.getenv("PORT", 5000))
 CORS_ORIGIN = os.getenv("CORS_ORIGIN", "http://localhost:5173")
 
 app = Flask(__name__)
-CORS(app, origins=[CORS_ORIGIN])
+CORS(app)
 
 @app.route("/health", methods=["GET"])
 def health():

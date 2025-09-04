@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AI Interviewer — Intake</title>
+    <title>AI Interviewer â€" Intake</title>
     <style>
       body { 
         font-family: Inter, system-ui, Arial, sans-serif; 
@@ -121,6 +121,11 @@
         color: #3182ce;
         border: 1px solid #90cdf4;
       }
+      .status.error {
+        background: #fed7d7;
+        color: #e53e3e;
+        border: 1px solid #feb2b2;
+      }
       .file-upload {
         position: relative;
         display: inline-block;
@@ -150,6 +155,51 @@
         background: #f0fff4;
         color: #38a169;
       }
+      .token-display {
+        margin-top: 16px;
+        padding: 16px;
+        background: #f7fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        display: none;
+      }
+      .token-display h3 {
+        margin: 0 0 12px 0;
+        color: #2d3748;
+        font-size: 16px;
+      }
+      .token-info {
+        margin-bottom: 12px;
+      }
+      .token-info label {
+        font-weight: 600;
+        color: #4a5568;
+        margin: 0 0 4px 0;
+        font-size: 12px;
+      }
+      .token-value {
+        font-family: monospace;
+        font-size: 12px;
+        background: #fff;
+        padding: 8px;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        word-break: break-all;
+        color: #2d3748;
+      }
+      .copy-btn {
+        background: #4a5568;
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 10px;
+        cursor: pointer;
+        margin-left: 8px;
+      }
+      .copy-btn:hover {
+        background: #2d3748;
+      }
     </style>
   </head>
   <body>
@@ -169,26 +219,26 @@
       
       <label>Job Description *<textarea id="jd" required>We are seeking an experienced Senior Sales Manager to lead our regional sales team. You will be responsible for:
 
-• Managing and mentoring a team of 6 Account Executives
-• Driving enterprise pipeline development and growth
-• Exceeding quarterly revenue targets ($2M+ quota)
-• Implementing MEDDIC sales methodology
-• Maintaining CRM hygiene and accurate forecasting
-• Building strategic relationships with key accounts
-• Collaborating with marketing and product teams
+â€¢ Managing and mentoring a team of 6 Account Executives
+â€¢ Driving enterprise pipeline development and growth
+â€¢ Exceeding quarterly revenue targets ($2M+ quota)
+â€¢ Implementing MEDDIC sales methodology
+â€¢ Maintaining CRM hygiene and accurate forecasting
+â€¢ Building strategic relationships with key accounts
+â€¢ Collaborating with marketing and product teams
 
 Requirements:
-• 5+ years in B2B sales leadership
-• Experience with enterprise sales cycles
-• Strong track record of quota achievement
-• Excellent communication and coaching skills
-• Experience with Salesforce or similar CRM</textarea></label>
+â€¢ 5+ years in B2B sales leadership
+â€¢ Experience with enterprise sales cycles
+â€¢ Strong track record of quota achievement
+â€¢ Excellent communication and coaching skills
+â€¢ Experience with Salesforce or similar CRM</textarea></label>
 
       <label>Resume Upload *
         <div class="file-upload">
           <input type="file" id="resume" accept=".pdf,.docx,.txt" required/>
           <label for="resume" class="file-upload-label" id="fileLabel">
-            📄 Click to upload your resume (PDF, DOCX, or TXT)
+            ðŸ"„ Click to upload your resume (PDF, DOCX, or TXT)
           </label>
         </div>
       </label>
@@ -197,6 +247,24 @@ Requirements:
       <button id="startBtn" class="btn" disabled>Upload Resume to Enable Interview</button>
       
       <div id="statusDiv"></div>
+
+      <div class="token-display" id="tokenDisplay">
+        <h3>🔑 Interview Session Details</h3>
+        <div class="token-info">
+          <label>Room Name:</label>
+          <div class="token-value" id="roomNameValue"></div>
+        </div>
+        <div class="token-info">
+          <label>Access Token:</label>
+          <div class="token-value" id="tokenValue"></div>
+          <button class="copy-btn" onclick="copyToken()">Copy</button>
+        </div>
+        <div class="token-info">
+          <label>WebSocket URL:</label>
+          <div class="token-value" id="urlValue"></div>
+          <button class="copy-btn" onclick="copyUrl()">Copy</button>
+        </div>
+      </div>
       
       <div class="link">
         <a id="playgroundLink" target="_blank" rel="noopener noreferrer" style="display: none;">
@@ -215,9 +283,12 @@ Requirements:
       const link = document.getElementById('playgroundLink');
       const statusDiv = document.getElementById('statusDiv');
       const fileLabel = document.getElementById('fileLabel');
+      const tokenDisplay = document.getElementById('tokenDisplay');
 
       let resumeText = "";
       let roomName = "";
+      let accessToken = "";
+      let websocketUrl = "";
 
       function showStatus(message, type = 'info') {
         statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
@@ -230,6 +301,18 @@ Requirements:
         return `interview-${timeStr}-${random}`;
       }
 
+      function copyToken() {
+        navigator.clipboard.writeText(accessToken).then(() => {
+          showStatus('✅ Token copied to clipboard!', 'success');
+        });
+      }
+
+      function copyUrl() {
+        navigator.clipboard.writeText(websocketUrl).then(() => {
+          showStatus('✅ URL copied to clipboard!', 'success');
+        });
+      }
+
       async function updatePlaygroundLink() {
         if (!roomName) return;
         
@@ -238,8 +321,21 @@ Requirements:
           const tokenResponse = await fetch(`https://token-nmmo.onrender.com/token?roomName=${roomName}&participantName=candidate`);
           const tokenData = await tokenResponse.json();
           
-          const url = new URL('https://agents-playground.livekit.io/');
-          url.searchParams.set('theme_color', 'blue');
+          console.log('Token Response:', tokenData); // Debug log
+          
+          if (tokenData.token && tokenData.url) {
+            accessToken = tokenData.token;
+            websocketUrl = tokenData.url;
+            
+            // Display token and URL information
+            document.getElementById('roomNameValue').textContent = roomName;
+            document.getElementById('tokenValue').textContent = accessToken;
+            document.getElementById('urlValue').textContent = websocketUrl;
+            tokenDisplay.style.display = 'block';
+          }
+          
+          // Update link to go to localhost:3000
+          const url = new URL('http://localhost:3000/');
           url.searchParams.set('room', roomName);
           url.searchParams.set('identity', 'candidate');
           
@@ -247,14 +343,19 @@ Requirements:
             url.searchParams.set('token', tokenData.token);
           }
           
+          if (tokenData.url) {
+            url.searchParams.set('url', tokenData.url);
+          }
+          
           link.href = url.toString();
           link.textContent = `🚀 Join Interview Room: ${roomName}`;
           link.style.display = 'inline-block';
         } catch (error) {
           console.error('Token fetch failed:', error);
-          // Fallback to current implementation
-          const url = new URL('https://agents-playground.livekit.io/');
-          url.searchParams.set('theme_color', 'blue');
+          showStatus('⚠️ Failed to fetch token, but you can still join the interview', 'error');
+          
+          // Fallback to localhost:3000 without token
+          const url = new URL('http://localhost:3000/');
           url.searchParams.set('room', roomName);
           url.searchParams.set('identity', 'candidate');
           
@@ -285,9 +386,7 @@ Requirements:
             console.log(response)
             showStatus(`❌ Upload failed: ${response.status}`, 'error');
             throw new Error(`Upload failed: ${response.status}`);
-
           }
-          
           
           const data = await response.json();
           

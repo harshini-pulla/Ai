@@ -44,20 +44,19 @@ class MCPHTTPClient:
         return await self._rpc("call_tool", {"name": name, "arguments": arguments or {}})
 
 class InterviewAgent(Agent):
-    def __init__(self):
+    def __init__(self, room_name: str = None):
         super().__init__(
-            instructions = """
+            instructions = f"""
 # Role
 You are "Orion", a professional AI interviewer. You conduct structured interviews and provide fair evaluations.
 
-# CRITICAL FIRST STEP
-THE MOMENT you join any room, you MUST immediately call `fetch_interview_context` with the exact room name to load the candidate's information. Do NOT say anything else until you have successfully loaded the context.
+# CRITICAL AUTOMATIC STARTUP
+You are joining room: {room_name if room_name else '[ROOM_NAME]'}
 
-If the context is not found:
-1. Tell the candidate there seems to be a setup issue
-2. Ask them to confirm the exact room name from their browser
-3. Try fetching context again with the room name they provide
-4. If still no context, guide them back to the intake form
+IMMEDIATELY when you start:
+1. Call `fetch_interview_context` with room name: {room_name if room_name else '[ROOM_NAME]'}
+2. Once context is loaded successfully, begin the interview automatically
+3. If context loading fails, ask candidate to confirm the room name and try again
 
 # CONVERSATION FLOW RULES - EXTREMELY IMPORTANT
 - **ASK ONLY ONE QUESTION AT A TIME**
@@ -107,12 +106,15 @@ If the context is not found:
 # End Process
 When interview concludes, call `finish_and_email_transcript` with complete transcript, scorecard, and notes.
 
-Remember: Context loading is MANDATORY before starting any interview conversation!
+# STARTUP BEHAVIOR
+Start immediately by calling fetch_interview_context, then begin the interview flow automatically.
 """
         )
         self._mcp_url = MCP_SERVER_URL
         self._interview_context = None
         self._transcript_log = []
+        self._room_name = room_name
+        self._context_loaded = False
 
     async def _call_mcp(self, tool_name: str, arguments: Dict[str, Any]):
         try:
@@ -133,6 +135,7 @@ Remember: Context loading is MANDATORY before starting any interview conversatio
         
         # Store context for later use
         self._interview_context = result
+        self._context_loaded = True
         
         # Provide a compact view for the LLM
         view = [
@@ -141,11 +144,15 @@ Remember: Context loading is MANDATORY before starting any interview conversatio
             f"Candidate: {result.get('name')} <{result.get('email')}>",
             f"Phone: {result.get('phone', 'Not provided')}",
             f"Job Title: {result.get('job_title')}",
-            f"Job Description: {result.get('job_description')[:1000]}",
-            f"Resume Summary (first 1000 chars):",
-            result.get('resume_text', '')[:1000],
+            f"Job Description: {result.get('job_description')[:500]}{'...' if len(result.get('job_description', '')) > 500 else ''}",
+            f"Resume Summary (first 500 chars):",
+            result.get('resume_text', '')[:500] + ('...' if len(result.get('resume_text', '')) > 500 else ''),
             "",
-            "🎯 You can now start the interview. Begin by introducing yourself and confirming the candidate's details."
+            "🎯 CONTEXT LOADED SUCCESSFULLY - NOW BEGIN THE INTERVIEW:",
+            "1. Introduce yourself as Orion",
+            f"2. Confirm you're speaking with {result.get('name')}",
+            "3. Ask for recording consent",
+            "4. Then proceed with the structured interview"
         ]
         return "\n".join(view)
 
@@ -195,7 +202,8 @@ async def entrypoint(ctx: JobContext):
         vad=silero.VAD.load(),
     )
     
-    agent = InterviewAgent()
+    # Pass room name to agent
+    agent = InterviewAgent(room_name=ctx.room.name)
     
     # Add event listeners for transcript logging (synchronous callbacks)
     session.on("agent_speech_committed", agent.on_agent_speech_committed)
@@ -204,25 +212,14 @@ async def entrypoint(ctx: JobContext):
     await session.start(room=ctx.room, agent=agent)
     logging.info("✅ Agent session started successfully")
     
-    # Immediately try to fetch context when agent joins
+    # Pre-check if context exists for this room (for logging purposes)
     try:
         room_name = ctx.room.name
-        logging.info(f"🔍 Attempting to fetch context for room: {room_name}")
-        
-        # Give the agent a moment to fully initialize
-        import asyncio
-        await asyncio.sleep(1)
-        
-        # Try to fetch context and log result
-        context_result = await agent._call_mcp("fetch_interview_context", {"room_name": room_name})
-        if context_result:
-            logging.info(f"✅ Successfully loaded context for {context_result.get('name', 'Unknown')}")
-        else:
-            logging.warning(f"⚠️ No context found for room: {room_name}")
-            logging.warning("💡 Make sure the candidate has filled the form and the room name matches exactly")
+        logging.info(f"🔍 Room started: {room_name}")
+        logging.info("💡 Agent will automatically fetch context and begin interview")
             
     except Exception as e:
-        logging.error(f"❌ Error fetching initial context: {e}")
+        logging.error(f"❌ Error in entrypoint setup: {e}")
 
 if __name__ == "__main__":
     agents.cli.run_app(agents.WorkerOptions(entrypoint_fnc=entrypoint))

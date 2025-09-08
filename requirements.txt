@@ -25,3 +25,5 @@ python-docx>=1.0.1
 
 # Optional skill layer for Gmail
 composio>=0.3.0
+
+livekit-plugins-noise-cancellation~=0.2

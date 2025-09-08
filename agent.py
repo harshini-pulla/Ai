@@ -8,6 +8,8 @@ import httpx
 from livekit import agents
 from livekit.agents import AgentSession, Agent, JobContext, function_tool
 from livekit.plugins import openai, silero
+# Add noise cancellation import
+from livekit.plugins import noise_cancellation
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] INTERVIEW_AGENT: %(message)s")
@@ -67,26 +69,26 @@ IMMEDIATELY when you start:
 - If they seem to be still speaking, wait for them to finish
 
 # Interview Structure (only after context is loaded)
-1. **Introduction & Consent** — Greet as Orion, confirm their name/email from the loaded context, ask permission to record and email transcript
+1. **Introduction & Consent** – Greet as Orion, confirm their name/email from the loaded context, ask permission to record and email transcript
 
-2. **Resume Warmup (2-3 questions)** — Ask about background items from their uploaded resume to build rapport
+2. **Resume Warmup (2-3 questions)** – Ask about background items from their uploaded resume to build rapport
 
-3. **Core Competency Assessment (5-7 questions)** — Based on the job description, ask:
+3. **Core Competency Assessment (5-7 questions)** – Based on the job description, ask:
    - Situational questions ("Tell me about a time...")
    - Behavioral questions (STAR method)
    - Technical/domain questions relevant to the role
 
-4. **Project Deep-Dive** — Pick one significant project from their resume:
+4. **Project Deep-Dive** – Pick one significant project from their resume:
    - Technical architecture and decisions
    - Measurable outcomes and impact
    - Challenges faced and solutions
 
-5. **Role-Specific Focus** — Tailor questions to the job:
+5. **Role-Specific Focus** – Tailor questions to the job:
    - Sales: Pipeline, quotas, MEDDIC, objection handling
    - Technical: System design, coding practices, architecture
    - Leadership: Team management, decision making
 
-6. **Candidate Questions & Wrap-up** — Ask about their questions, confirm contact info
+6. **Candidate Questions & Wrap-up** – Ask about their questions, confirm contact info
 
 # Evaluation Rubric (1-5 scale)
 - Communication: Clarity and professionalism
@@ -185,7 +187,7 @@ async def entrypoint(ctx: JobContext):
     logging.info(f"🚀 Agent starting for room: {ctx.room.name}")
     await ctx.connect()
     
-    # Enhanced session configuration
+    # Enhanced session configuration with noise cancellation
     session = AgentSession(
         stt=openai.STT(
             model="whisper-1", 
@@ -209,13 +211,31 @@ async def entrypoint(ctx: JobContext):
     session.on("agent_speech_committed", agent.on_agent_speech_committed)
     session.on("user_speech_committed", agent.on_user_speech_committed)
     
-    await session.start(room=ctx.room, agent=agent)
-    logging.info("✅ Agent session started successfully")
+    # Start session with noise cancellation enabled
+    try:
+        await session.start(
+            room=ctx.room, 
+            agent=agent,
+            # Add noise cancellation directly to session start
+            # BVC removes background noise AND background voices for better STT accuracy
+            noise_cancellation=noise_cancellation.BVC()
+        )
+        logging.info("✅ Agent session started successfully with noise cancellation enabled")
+        logging.info("🔊 Background Voice Cancellation (BVC) is active for optimal audio quality")
+    except Exception as e:
+        logging.warning(f"⚠️ Failed to start with noise cancellation: {e}")
+        logging.info("🔄 Falling back to session without noise cancellation")
+        # Fallback without noise cancellation if it fails
+        await session.start(
+            room=ctx.room, 
+            agent=agent
+        )
+        logging.info("✅ Agent session started successfully (without noise cancellation)")
     
     # Pre-check if context exists for this room (for logging purposes)
     try:
         room_name = ctx.room.name
-        logging.info(f"🔍 Room started: {room_name}")
+        logging.info(f"📋 Room started: {room_name}")
         logging.info("💡 Agent will automatically fetch context and begin interview")
             
     except Exception as e:

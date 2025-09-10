@@ -164,6 +164,22 @@ class InterviewMCP:
 
             timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
             
+            # Ensure transcript has speaker tags
+            formatted_transcript = []
+            for line in transcript.split("\n"):
+                line = line.strip()
+                if not line:
+                    continue
+                if line.lower().startswith(("agent:", "candidate:")):
+                    formatted_transcript.append(line)
+                else:
+                    # Default heuristic: alternate Agent/Candidate if not tagged
+                    if len(formatted_transcript) % 2 == 0:
+                        formatted_transcript.append(f"Agent: {line}")
+                    else:
+                        formatted_transcript.append(f"Candidate: {line}")
+            transcript = "\n".join(formatted_transcript)
+            
             # Email to candidate
             subject_candidate = f"Your Interview Transcript — {job_title} Interview"
             body_candidate = f"""Dear {candidate_name},
